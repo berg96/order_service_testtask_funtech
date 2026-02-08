@@ -23,6 +23,11 @@ class Settings(BaseSettings):
     RATE_LIMIT: int = Field(10, description="Допустимое количество запросов")
     RATE_LIMIT_TTL: int = Field(10, description="Время жизни счётчика rate limiting в секундах")
 
+    JWT_SECRET: str = Field(..., description="Секретный ключ для кодирования/декодирования jwt")
+    JWT_EXPIRES_MINUTES: int = Field(10, description="Время жизни Access токена")
+    JWT_REFRESH_EXPIRES_MINUTES: int = Field(4320, description="Время жизни Refresh токена (3 суток по умолчанию)")
+    USER_CACHE_TTL: int = Field(60, description="Время жизни данных о пользователе в кэше")
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

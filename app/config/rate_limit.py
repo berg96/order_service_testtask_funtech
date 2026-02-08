@@ -1,14 +1,9 @@
-import redis
 from fastapi import HTTPException, Request
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from .settings import settings
+from app.clients.redis import get_redis_client
 
-redis_client = redis.asyncio.from_url(
-    settings.REDIS_URL,
-    encoding="utf-8",
-    decode_responses=True,
-)
+from .settings import settings
 
 
 class RateLimitMiddleware(BaseHTTPMiddleware):
@@ -16,7 +11,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         client_ip = request.client.host
         path = request.url.path
         key = f"rate_limit:{client_ip}:{path}"
-
+        redis_client = await get_redis_client().__anext__()
         current = await redis_client.incr(key)
 
         if current == 1:
