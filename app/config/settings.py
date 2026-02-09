@@ -8,6 +8,10 @@ class Settings(BaseSettings):
     APP_TITLE: str = Field("Orders", description="Название приложения")
     APP_DESCRIPTION: str = Field("Сервис управления заказами", description="Описание приложения")
 
+    ORIGINS: str = Field(
+        "http://example.com,http://test.ru", description="Допустимые страницы для запросов (строка через запятую)"
+    )
+
     DB_TYPE: str = Field("postgresql", description="Тип БД")
     DB_CONNECTOR: str = Field("asyncpg", description="Коннектор к БД")
     POSTGRES_DB: str = Field(..., description="Название БД")
@@ -27,6 +31,9 @@ class Settings(BaseSettings):
     JWT_EXPIRES_MINUTES: int = Field(10, description="Время жизни Access токена")
     JWT_REFRESH_EXPIRES_MINUTES: int = Field(4320, description="Время жизни Refresh токена (3 суток по умолчанию)")
     USER_CACHE_TTL: int = Field(60, description="Время жизни данных о пользователе в кэше")
+
+    PASS_MIN_LENGTH: int = Field(8, description="Минимальная длина пароля пользователя")
+    PASS_MAX_LENGTH: int = Field(256, description="Максимальная длина пароля пользователя")
 
     model_config = SettingsConfigDict(
         env_file=".env",

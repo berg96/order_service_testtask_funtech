@@ -3,10 +3,14 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
+from app.config.settings import settings
+
 
 class UserRegister(BaseModel):
     email: EmailStr = Field(..., description="Email пользователя")
-    password: str = Field(..., min_length=8, max_length=72, description="Пароль пользователя")
+    password: str = Field(
+        ..., min_length=settings.PASS_MIN_LENGTH, max_length=settings.PASS_MAX_LENGTH, description="Пароль пользователя"
+    )
 
 
 class UserFromDB(BaseModel):

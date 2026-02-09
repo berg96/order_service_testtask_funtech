@@ -2,9 +2,10 @@ from unittest.mock import AsyncMock
 
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
+from passlib.context import CryptContext
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
-from app.clients.db import get_async_session
+from app.clients.db import User, get_async_session
 from app.config.settings import settings
 from app.main import app
 
@@ -66,3 +67,15 @@ async def disable_rate_limit(request, monkeypatch):
     monkeypatch.setattr("app.config.rate_limit.get_redis_client", lambda: fake_redis_gen())
 
     yield
+
+
+@pytest_asyncio.fixture
+async def create_user(async_session):
+    async def _create(email: str, password: str) -> User:
+        user = User(email=email, hashed_password=CryptContext(schemes=["argon2"], deprecated="auto").hash(password))
+        async_session.add(user)
+        await async_session.commit()
+        await async_session.refresh(user)
+        return user
+
+    return _create

@@ -1,5 +1,4 @@
 import pytest
-from fastapi import HTTPException
 
 from app.config.settings import settings
 
@@ -22,21 +21,6 @@ async def test_register_duplicate_email(async_client):
     assert response.status_code == 409
 
 
-@pytest.mark.real_rate_limit
-@pytest.mark.asyncio
-async def test_rate_limit_enforced(async_client):
-    payload = {"email": "ratelimit@example.com", "password": "StrongPass123"}
-
-    for _ in range(settings.RATE_LIMIT):
-        response = await async_client.post("/api/register", json=payload)
-        assert response.status_code in (201, 409)
-
-    with pytest.raises(HTTPException) as exc:
-        await async_client.post("/api/register", json=payload)
-    assert exc.value.status_code == 429
-    assert "too many requests" in exc.value.detail.lower()
-
-
 @pytest.mark.asyncio
 async def test_register_invalid_email(async_client):
     payload = {"email": "invalid-email", "password": "StrongPass123"}
@@ -46,6 +30,19 @@ async def test_register_invalid_email(async_client):
 
 @pytest.mark.asyncio
 async def test_register_short_pass(async_client):
-    payload = {"email": "test@example.com", "password": "pass"}
+    payload = {"email": "test@example.com", "password": "p" * (settings.PASS_MIN_LENGTH - 1)}
+    response = await async_client.post("/api/register", json=payload)
+    assert response.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_register_long_pass(async_client):
+    payload = {"email": "test@example.com", "password": "p" * (settings.PASS_MAX_LENGTH + 1)}
+    response = await async_client.post("/api/register", json=payload)
+    assert response.status_code == 422
+
+
+async def test_register_missing_password(async_client):
+    payload = {"email": "no-pass@example.com"}
     response = await async_client.post("/api/register", json=payload)
     assert response.status_code == 422

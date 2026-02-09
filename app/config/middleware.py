@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .rate_limit import RateLimitMiddleware
+from .settings import settings
 
 
 def setup_middleware(app: FastAPI) -> None:
@@ -12,7 +13,7 @@ def setup_middleware(app: FastAPI) -> None:
     # CORS
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],
+        allow_origins=settings.ORIGINS.split(","),
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],

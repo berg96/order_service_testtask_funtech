@@ -30,7 +30,7 @@ class UserService:
         )
 
     async def authenticate_user(self, email: str, password: str) -> UserEntity:
-        user = await self.repo.get_by_email(email)
+        user = await self.repo.get_by_email(email, return_none=True)
         if not user or not self._verify_password(password, user.hashed_password):
             raise ValueError("Invalid credentials")
 

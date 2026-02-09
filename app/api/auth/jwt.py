@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 import jwt
 
@@ -23,7 +23,7 @@ class JWTToken:
         else:
             expires_delta = self.__expires_delta
 
-        payload["exp"] = datetime.utcnow() + timedelta(minutes=expires_delta)
+        payload["exp"] = datetime.now(UTC) + timedelta(minutes=expires_delta)
         payload["role"] = role.value
 
         return jwt.encode(payload, self.__secret, algorithm=self.__algorithm)
