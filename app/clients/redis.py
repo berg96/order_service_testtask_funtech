@@ -1,22 +1,13 @@
-import redis
+from fastapi import Request
+from redis.asyncio import Redis
 
-from app.config.settings import settings
 
-
-async def get_redis_client():
-    redis_client = redis.asyncio.from_url(
-        settings.REDIS_URL,
-        encoding="utf-8",
-        decode_responses=True,
-    )
-    try:
-        yield redis_client
-    finally:
-        await redis_client.aclose()
+def get_redis(request: Request) -> Redis:
+    return request.app.state.redis
 
 
 class RedisCache:
-    def __init__(self, redis_client):
+    def __init__(self, redis_client: Redis):
         self._client = redis_client
 
     async def get(self, key: str):

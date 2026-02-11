@@ -1,12 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from starlette import status
 
 from app.api.auth.jwt import JWTToken
 from app.api.schemas import ErrorResponse
 from app.clients.db import get_async_session
-from app.domain.exceptions import UserAlreadyExists
-from app.services.user.service import UserService
+from app.services.user import UserService
 
 from .schemas import Token, UserFromDB, UserRegister
 
@@ -28,11 +26,7 @@ async def register(
     data: UserRegister,
     session: AsyncSession = Depends(get_async_session),
 ) -> UserFromDB:
-    try:
-        user = await UserService(session).register_user(str(data.email), data.password)
-    except UserAlreadyExists:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="User already exists")
-
+    user = await UserService(session).register_user(str(data.email), data.password)
     return UserFromDB.model_validate(user)
 
 
@@ -51,11 +45,7 @@ async def login(
     data: UserRegister,
     session: AsyncSession = Depends(get_async_session),
 ) -> Token:
-    try:
-        user = await UserService(session).authenticate_user(str(data.email), data.password)
-    except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
-
+    user = await UserService(session).authenticate_user(str(data.email), data.password)
     return Token(
         access_token=JWTToken().encode({"uuid": str(user.uuid)}),
         refresh_token=JWTToken().create_refresh_token(user_uuid=user.uuid),

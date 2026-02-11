@@ -1,10 +1,27 @@
-from fastapi import FastAPI
+from contextlib import asynccontextmanager
 
+from fastapi import FastAPI
+from redis.asyncio import Redis
+
+from .api.exception_handlers import setup_exception_handlers
 from .api.router import main_router
 from .config.middleware import setup_middleware
 from .config.settings import settings
 
-app = FastAPI(title=settings.APP_TITLE, description=settings.APP_DESCRIPTION)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    app.state.redis = Redis.from_url(
+        settings.REDIS_URL,
+        encoding="utf-8",
+        decode_responses=True,
+    )
+    yield
+    await app.state.redis.close()
+
+
+app = FastAPI(title=settings.APP_TITLE, description=settings.APP_DESCRIPTION, lifespan=lifespan)
 
 setup_middleware(app)
 app.include_router(main_router)
+setup_exception_handlers(app)

@@ -42,6 +42,14 @@ async def test_register_long_pass(async_client):
     assert response.status_code == 422
 
 
+@pytest.mark.asyncio
+async def test_register_null_pass(async_client):
+    payload = {"email": "test@example.com", "password": " " * (settings.PASS_MIN_LENGTH - 1)}
+    response = await async_client.post("/api/register", json=payload)
+    assert response.status_code == 422
+
+
+@pytest.mark.asyncio
 async def test_register_missing_password(async_client):
     payload = {"email": "no-pass@example.com"}
     response = await async_client.post("/api/register", json=payload)

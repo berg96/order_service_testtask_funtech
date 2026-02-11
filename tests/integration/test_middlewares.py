@@ -4,7 +4,7 @@ from fastapi import HTTPException
 from app.config.settings import settings
 
 
-@pytest.mark.real_rate_limit
+@pytest.mark.real_redis
 @pytest.mark.asyncio
 async def test_rate_limit_enforced(async_client):
     payload = {"email": "ratelimit@example.com", "password": "StrongPass123"}

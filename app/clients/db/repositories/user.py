@@ -13,31 +13,26 @@ class UserRepository:
         self.session = session
 
     @staticmethod
-    def from_orm(user: Optional[User], return_none: bool = False) -> Optional[UserEntity]:
+    async def _raise_if_none(user: Optional[User], identifier: str, return_none: bool) -> Optional[UserEntity]:
         if user is None:
             if return_none:
                 return None
-            else:
-                raise UserNotFound
-        return UserEntity(
-            id=user.id,
-            uuid=user.uuid,
-            email=user.email,
-            hashed_password=user.hashed_password,
-            created_at=user.created_at,
-        )
+            raise UserNotFound(identifier=identifier)
+        return UserEntity.from_orm(user)
 
-    async def create(self, email: str, hashed_password: str) -> Optional[UserEntity]:
+    async def create(self, email: str, hashed_password: str) -> UserEntity:
         user = User(email=email, hashed_password=hashed_password)
         self.session.add(user)
         await self.session.commit()
         await self.session.refresh(user)
-        return self.from_orm(user)
+        return UserEntity.from_orm(user)
 
     async def get_by_email(self, email: str, return_none: bool = False) -> Optional[UserEntity]:
         result = await self.session.execute(select(User).where(User.email == email))
-        return self.from_orm(result.scalar_one_or_none(), return_none)
+        user = result.scalar_one_or_none()
+        return await self._raise_if_none(user, identifier=email, return_none=return_none)
 
     async def get_by_uuid(self, uuid: str, return_none: bool = False) -> Optional[UserEntity]:
         result = await self.session.execute(select(User).where(User.uuid == uuid))
-        return self.from_orm(result.scalar_one_or_none(), return_none)
+        user = result.scalar_one_or_none()
+        return await self._raise_if_none(user, identifier=uuid, return_none=return_none)

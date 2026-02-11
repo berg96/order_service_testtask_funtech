@@ -5,7 +5,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.clients.db import get_async_session
 from app.clients.db.repositories.user import UserRepository
-from app.clients.redis import RedisCache, get_redis_client
+from app.clients.redis import RedisCache, get_redis
 from app.config.settings import settings
 
 from .exceptions import JWTExpired, WrongJWTData
@@ -18,7 +18,11 @@ bearer_scheme = HTTPBearer()
 class TokenVerifyService:
     @classmethod
     def verify(cls):
-        async def dependency(token: HTTPAuthorizationCredentials = Depends(bearer_scheme)) -> TokenUser:
+        async def dependency(
+            token: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+            session=Depends(get_async_session),
+            redis=Depends(get_redis),
+        ) -> TokenUser:
             try:
                 payload = JWTToken().decode(token.credentials)
             except jwt.ExpiredSignatureError:
@@ -29,12 +33,11 @@ class TokenVerifyService:
             if payload.get("role") != TokenRoles.ACCESS.value:
                 raise WrongJWTData
 
-            redis_client = await get_redis_client().__anext__()
-            cache = RedisCache(redis_client)
-            if cached := await cache.get(payload["uuid"]):
+            cache = RedisCache(redis)
+            if cached := await cache.get(f"user:{payload["uuid"]}"):
                 return TokenUser(**orjson.loads(cached))
 
-            user = await UserRepository(session=get_async_session()).get_by_uuid(payload["uuid"], return_none=True)
+            user = await UserRepository(session).get_by_uuid(payload["uuid"], return_none=True)
             if not user:
                 raise WrongJWTData
             user_model = TokenUser(
@@ -44,10 +47,13 @@ class TokenVerifyService:
                 created_at=user.created_at,
             )
             await cache.set(
-                key=str(user.uuid),
-                value=orjson.dumps(user_model.model_dump()).decode(),
+                key=f"user:{user.uuid}",
+                value=orjson.dumps(user_model.model_dump(mode="json")).decode(),
                 ttl=settings.USER_CACHE_TTL,
             )
             return user_model
 
         return dependency
+
+
+verify_token = TokenVerifyService.verify()

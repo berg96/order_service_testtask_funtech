@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from app.config.settings import settings
 
 from .base import Base
+from .models.order import Order
 from .models.user import User
 
 DATABASE_URL = settings.get_db_url()
@@ -16,4 +17,9 @@ async def get_async_session():
         yield async_session
 
 
-__all__ = ["Base", "User", "get_async_session"]
+__all__ = [
+    "Base",
+    "Order",
+    "User",
+    "get_async_session",
+]
