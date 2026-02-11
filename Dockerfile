@@ -10,5 +10,9 @@ ENV PYTHONPATH=/app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY faststream_app ./faststream_app
-CMD ["python", "-m", "faststream_app.main"]
+COPY app ./app
+COPY alembic.ini ./
+COPY alembic_postgres ./alembic_postgres
+
+CMD alembic upgrade head && \
+    uvicorn app.main:app --host 0.0.0.0 --port 8000

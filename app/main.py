@@ -6,12 +6,15 @@ from redis.asyncio import Redis
 from .api.exception_handlers import setup_exception_handlers
 from .api.router import main_router
 from .clients.kafka import broker
+from .config.health import run_health_check
 from .config.middleware import setup_middleware
 from .config.settings import settings
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    if not await run_health_check():
+        exit(1)
     app.state.redis = Redis.from_url(
         settings.REDIS_URL,
         encoding="utf-8",
