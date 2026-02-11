@@ -5,6 +5,7 @@ from redis.asyncio import Redis
 
 from .api.exception_handlers import setup_exception_handlers
 from .api.router import main_router
+from .clients.kafka import broker
 from .config.middleware import setup_middleware
 from .config.settings import settings
 
@@ -16,8 +17,10 @@ async def lifespan(app: FastAPI):
         encoding="utf-8",
         decode_responses=True,
     )
+    await broker.start()
     yield
     await app.state.redis.close()
+    await broker.stop()
 
 
 app = FastAPI(title=settings.APP_TITLE, description=settings.APP_DESCRIPTION, lifespan=lifespan)

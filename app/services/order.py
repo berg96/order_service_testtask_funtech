@@ -6,6 +6,7 @@ from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.clients.db.repositories.order import OrderRepository
+from app.clients.kafka.producer import kafka_producer
 from app.clients.redis import RedisCache
 from app.config.settings import settings
 from app.domain.entities.order import OrderEntity
@@ -19,6 +20,7 @@ class OrderService:
         self.session = session
         self.repo = OrderRepository(session)
         self.cache = RedisCache(redis)
+        self.kafka_producer = kafka_producer
 
     async def _update_cache(self, order: OrderEntity):
         await self.cache.set(
@@ -35,6 +37,7 @@ class OrderService:
     async def create_order(self, user_id: int, items: list[dict[str, Any]], total_price: float) -> OrderEntity:
         order = await self.repo.create(user_id=user_id, items=items, total_price=total_price)
         await self._update_cache(order)
+        await self.kafka_producer.notify_new_order(order.id)
         return order
 
     async def get_order(self, order_id: UUID, user_id: int) -> Optional[OrderEntity]:

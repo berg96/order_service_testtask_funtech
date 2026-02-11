@@ -17,3 +17,4 @@ alembic==1.18.3
 argon2-cffi==25.1.0
 pytest-asyncio==1.3.0
 httpx==0.28.1
+faststream[kafka]==0.6.6

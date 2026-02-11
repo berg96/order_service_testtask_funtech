@@ -22,6 +22,12 @@ class Settings(BaseSettings):
 
     DB_SCHEMA: str = Field("orders", description="Имя схемы БД")
 
+    KAFKA_BOOTSTRAP_SERVERS: str = Field(..., description="Адреса Kafka брокеров через запятую")
+    KAFKA_PRODUCER_ACKS: str = Field("all", description="Гарантия доставки сообщений (all, 1, 0)")
+    KAFKA_PRODUCER_RETRIES: int = Field(3, description="Количество попыток повторной отправки при ошибке")
+    KAFKA_PRODUCER_RETRY_DELAY: int = Field(1, description="Задержка между попытками публикации сообщений, сек")
+    KAFKA_TOPIC_NEW_ORDER: str = Field("new_order", description="Топик для событий созданий нового заказа")
+
     REDIS_URL: str = Field(..., description="URL подключения к Redis")
 
     RATE_LIMIT: int = Field(10, description="Допустимое количество запросов")
