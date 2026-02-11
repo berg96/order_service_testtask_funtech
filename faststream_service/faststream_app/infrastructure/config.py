@@ -9,6 +9,9 @@ class Settings(BaseSettings):
     KAFKA_PRODUCER_RETRY_DELAY: int = Field(1, description="Задержка между попытками публикации сообщений, сек")
     KAFKA_TOPIC_NEW_ORDER: str = Field("new_order", description="Топик для событий созданий нового заказа")
 
+    REDIS_BROKER_URL: str = Field(..., description="Брокер задач для Celery")
+    REDIS_BACKEND_URL: str = Field(..., description="Брокер ответов после выполнения задач из Celery")
+
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
 
